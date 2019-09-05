@@ -146,7 +146,7 @@ Echo.prototype.onInterest = function(prefix, interest, face, interestFilterId, f
   } catch (e) {
     console.log(e.toString());
   }
-  this.face.close();  // This will cause the script to quit.
+  // this.face.close();  // This will cause the script to quit.
 };
 
 Echo.prototype.onRegisterFailed = function(prefix)
