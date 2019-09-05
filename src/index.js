@@ -163,10 +163,20 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         blockId = parseInt((afid.split('.'))[1])
         afid = (afid.split('.'))[0]
     }
-    const cmd = `cd /aos/ks/afs_1e/;\
+    const x64cmd = `cd /aos/ks/afs_1e/;\
     ./afs-x64 \";_f=query;afid=${afid};\";`
-    const out = await exec(cmd)
-    const res = out.stdout
+    const x86cmd = `cd /aos/ks/afs_1e/;\
+    ./afs-x86 \";_f=query;afid=${afid};\";`
+    let res = ''
+    try {
+        const out = await exec(x64cmd)
+        res = out.stdout
+    } catch {
+        const out = await exec(x86cmd)
+        res = out.stdout
+    }
+
+
     if (res.indexOf('is_exist=true') === -1) {
         return
     }
@@ -266,27 +276,27 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         console.log('parameter request :' + afid)
         const cmd2 = `
             cd /aos/ks/afs_1e/;\./afs-x64 ";_f=read_parameter;afid=${afid};parameter_name=time_stamp_expired;"`
-            const out = await exec(cmd2)
-            const res = out.stdout
-            const rs = fs.readFileSync(`${__dirname}/../config.json`)
-            const config = JSON.parse(rs)
+        const out = await exec(cmd2)
+        const res = out.stdout
+        const rs = fs.readFileSync(`${__dirname}/../config.json`)
+        const config = JSON.parse(rs)
 
-            if(res.indexOf('_r=true')!==-1){
-                const arr = res.split('parameter_value=')
-                const time = (arr[1].split(';'))[0]
-                data.setContent(JSON.stringify({
-                    expired_time: time,
-                    ...config
-                }));
-                that.keyChain.sign(data);
-                try {
-                    face.putData(data);
-                } catch (e) {
-                    console.log(e.toString());
-                }
-            }else{
-                return
+        if (res.indexOf('_r=true') !== -1) {
+            const arr = res.split('parameter_value=')
+            const time = (arr[1].split(';'))[0]
+            data.setContent(JSON.stringify({
+                expired_time: time,
+                ...config
+            }));
+            that.keyChain.sign(data);
+            try {
+                face.putData(data);
+            } catch (e) {
+                console.log(e.toString());
             }
+        } else {
+            return
+        }
     }
 
 
