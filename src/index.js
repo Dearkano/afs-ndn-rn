@@ -176,7 +176,8 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         res = out.stdout
     }
 
-
+    console.log('fin')
+    console.log(res)
     if (res.indexOf('is_exist=true') === -1) {
         return
     }
