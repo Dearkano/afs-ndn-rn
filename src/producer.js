@@ -173,7 +173,7 @@ function main()
   face.setCommandSigningInfo(keyChain, keyChain.getDefaultCertificateName());
 
   var echo = new Echo(keyChain, face);
-  var prefix = new Name("/chat");
+  var prefix = new Name("/bfs");
   console.log("Register prefix " + prefix.toUri());
   face.registerPrefix
     (prefix, echo.onInterest.bind(echo), echo.onRegisterFailed.bind(echo));

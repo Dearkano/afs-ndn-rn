@@ -154,7 +154,7 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
     // Make and sign a Data packet.
     const that = this
     const data = new Data(interest.getName());
-    // info request : /bfs/info/afid=xxxxx
+    // info request : /bfs/info/afid/xxxxx
     const str = interest.getName().toUri()
     console.log(str)
     let blockId = 0
