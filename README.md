@@ -1,3 +1,8 @@
+## install docker on raspbian
+`curl -fsSL get.docker.com | CHANNEL=nightly sh`
+`sudo docker pull vaynetian/ndn-astri-docker-iot`
+`sudo docker run -v /data/tmp/:/tmp -v /aos:/aos -it --privileged=true --name=ndn-astri-docker-iot --network host -d vaynetian/ndn-astri-docker-iot /bin/bash`
+`sudo docker exec -it ndn-astri-docker-iot bash`
 ## build ndn docker
 **use docker image online from dockerhub**
 
