@@ -170,8 +170,10 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
     ./afs-x86 \";_f=query;afid=${afid};\";`
     let res = ''
     if (method === 'network') {
+        console.log('using netowrk')
         const r = await fetch(`http://localhost:${port}/v1/un/exists/file?afid=${afid}`)
         res = await r.json()
+        console.log(res)
         if (!res.is_exists) {
             return
         }
