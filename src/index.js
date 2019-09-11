@@ -192,6 +192,7 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         const rs = fs.readFileSync(`${__dirname}/../config.json`)
         const config = JSON.parse(rs)
         obj.config = config
+        obj.ini = ini
         console.log(obj)
         data.setContent(JSON.stringify(obj));
         that.keyChain.sign(data);
