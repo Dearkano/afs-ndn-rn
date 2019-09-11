@@ -28,6 +28,7 @@ const {
 const fs = require('fs')
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
+const fetch = require('node-fetch')
 
 const DEFAULT_RSA_PUBLIC_KEY_DER = new Buffer([
     0x30, 0x82, 0x01, 0x22, 0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01,
@@ -136,8 +137,6 @@ const Echo = function Echo(keyChain, face) {
     this.keyChain = keyChain;
     this.face = face;
 };
-let PIT = []
-const BufferTable = {}
 
 function distinctArr(arr) {
     arr = arr.sort()
@@ -149,15 +148,12 @@ function distinctArr(arr) {
     return result
 }
 Echo.prototype.onInterest = async function (prefix, interest, face, interestFilterId, filter) {
-    //console.log('---------------PIT:------------')
-    //console.log(PIT)
     // Make and sign a Data packet.
     const that = this
     const data = new Data(interest.getName());
     // info request : /bfs/info/afid/xxxxx
     const str = interest.getName().toUri()
     console.log(str)
-    let blockId = 0
     let afid = str.indexOf('/afid/') === -1 ? '' : (str.split('/afid/'))[1]
     if (afid.indexOf('.') !== -1) {
         blockId = parseInt((afid.split('.'))[1])
@@ -166,35 +162,38 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
     const rs = fs.readFileSync(`${__dirname}/../config.json`)
     const config = JSON.parse(rs)
     const path = config.path
+    const port = config.port
+    const method = config.method
     const x64cmd = `cd ${path};\
     ./afs-x64 \";_f=query;afid=${afid};\";`
     const x86cmd = `cd ${path};\
     ./afs-x86 \";_f=query;afid=${afid};\";`
     let res = ''
-    try {
-        const out = await exec(x64cmd)
-        res = out.stdout
-    } catch {
-        const out = await exec(x86cmd)
-        res = out.stdout
+    if (method === 'network') {
+        const r = await fetch(`http://localhost:${port}/v1/un/exists/file?afid=${afid}`)
+        res = await r.json()
+        if (!res.is_exists) {
+            return
+        }
+    } else {
+        try {
+            const out = await exec(x64cmd)
+            res = out.stdout
+        } catch {
+            const out = await exec(x86cmd)
+            res = out.stdout
+        }
+
+        if (res.indexOf('is_exist=true') === -1) {
+            return
+        }
     }
 
-    console.log('fin')
-    console.log(res)
-    if (res.indexOf('is_exist=true') === -1) {
-        return
-    }
-
-    // ...
 
     if ((str.split('/'))[2] === 'info') {
         let obj = {}
-        const ini = fs.readFileSync('/aos/afs/afs.ini', 'utf8')
         obj.result = res
-        // obj.ini = ini
         obj.config = config
-        obj.ini = ini
-        console.log(obj)
         data.setContent(JSON.stringify(obj));
         that.keyChain.sign(data);
 
@@ -202,104 +201,6 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
             face.putData(data);
         } catch (e) {
             console.log(e.toString());
-        }
-    } else if ((str.split('/'))[2] === 'pre') {
-        console.log('pre request :' + afid)
-        // if (!PIT.includes(afid)) {
-        PIT.push(afid)
-        PIT = distinctArr(PIT)
-        const cmd1 = `
-            cd /aos/ks/afs_1e/;\./afs-x64 ";_f=download;afid=${afid};local_file=/root/${afid}.dat;"`
-        console.log('begin download')
-        await exec(cmd1)
-        console.log('download end')
-        let arr = []
-        const file = fs.createReadStream(`/root/${afid}.dat`, {
-            highWaterMark: 8 * 1024
-        })
-        file.setEncoding('utf-8')
-        // const ini = fs.readFileSync('/aos/afs/afs.ini', 'utf8')
-        file.on('data', v => {
-            arr.push(v)
-        })
-        file.on('end', () => {
-            BufferTable[afid] = arr
-            console.log('end')
-            console.log(arr.length)
-            data.setContent(JSON.stringify({
-                blockNum: arr.length
-            }));
-            that.keyChain.sign(data);
-            try {
-                face.putData(data);
-            } catch (e) {
-                console.log(e.toString());
-            }
-        })
-        // } else {
-        //     console.log('pit includes')
-        //     const arr = BufferTable[afid]
-        //     data.setContent(JSON.stringify({
-        //         blockNum: arr.length
-        //     }))
-        //     that.keyChain.sign(data);
-        //     try {
-        //         face.putData(data);
-        //     } catch (e) {
-        //         console.log(e.toString());
-        //     }
-        // }
-    } else if ((str.split('/'))[2] === 'download') {
-        console.log('download block ' + blockId)
-        const arr = BufferTable[afid]
-        if (!arr) {
-            console.log('buffer table does not contain this afid, blockid = ' + blockId)
-            return
-        }
-        const end = arr.length === blockId + 1
-        if (end) {
-            console.log('end')
-            const index = PIT.indexOf(afid);
-            if (index > -1) {
-                PIT.splice(index, 1);
-                const rmcmd = `rm -rf /root/${afid}.dat`
-                BufferTable[afid] = null
-                exec(rmcmd)
-            }
-        }
-        console.log('data len = ' + arr[blockId].length)
-        data.setContent(arr[blockId]);
-        that.keyChain.sign(data);
-        try {
-            face.putData(data);
-        } catch (e) {
-            console.log(e.toString());
-        }
-
-    } else if ((str.split('/'))[2] === 'parameter') {
-        console.log('parameter request :' + afid)
-        const cmd2 = `
-            cd /aos/ks/afs_1e/;\./afs-x64 ";_f=read_parameter;afid=${afid};parameter_name=time_stamp_expired;"`
-        const out = await exec(cmd2)
-        const res = out.stdout
-        const rs = fs.readFileSync(`${__dirname}/../config.json`)
-        const config = JSON.parse(rs)
-
-        if (res.indexOf('_r=true') !== -1) {
-            const arr = res.split('parameter_value=')
-            const time = (arr[1].split(';'))[0]
-            data.setContent(JSON.stringify({
-                expired_time: time,
-                ...config
-            }));
-            that.keyChain.sign(data);
-            try {
-                face.putData(data);
-            } catch (e) {
-                console.log(e.toString());
-            }
-        } else {
-            return
         }
     }
 

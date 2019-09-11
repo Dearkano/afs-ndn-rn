@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "ndn-js-sdk": "^0.19.0"
+    "ndn-js-sdk": "^0.19.0",
+    "node-fetch": "^2.6.0"
   }
 }

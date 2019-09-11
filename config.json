@@ -1,5 +1,7 @@
 {
     "address": "",
     "type": "rnode",
-    "path":"/aos/ks/afs_1e"
+    "path":"/aos/ks/afs_1e",
+    "port": 8099,
+    "method": "local"
 }
