@@ -1,4 +1,5 @@
 {
-    "cluster": "",
-    "type": "rnode"
+    "address": "",
+    "type": "rnode",
+    "path":"/aos/ks/afs_1e"
 }

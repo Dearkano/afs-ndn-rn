@@ -163,9 +163,12 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         blockId = parseInt((afid.split('.'))[1])
         afid = (afid.split('.'))[0]
     }
-    const x64cmd = `cd /aos/ks/afs_1e/;\
+    const rs = fs.readFileSync(`${__dirname}/../config.json`)
+    const config = JSON.parse(rs)
+    const path = config.path
+    const x64cmd = `cd ${path};\
     ./afs-x64 \";_f=query;afid=${afid};\";`
-    const x86cmd = `cd /aos/ks/afs_1e/;\
+    const x86cmd = `cd ${path};\
     ./afs-x86 \";_f=query;afid=${afid};\";`
     let res = ''
     try {
@@ -189,8 +192,6 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         const ini = fs.readFileSync('/aos/afs/afs.ini', 'utf8')
         obj.result = res
         // obj.ini = ini
-        const rs = fs.readFileSync(`${__dirname}/../config.json`)
-        const config = JSON.parse(rs)
         obj.config = config
         obj.ini = ini
         console.log(obj)
