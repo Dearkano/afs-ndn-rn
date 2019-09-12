@@ -159,7 +159,7 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         blockId = parseInt((afid.split('.'))[1])
         afid = (afid.split('.'))[0]
     }
-    const rs = fs.readFileSync(`${__dirname}/../config.json`)
+    //const rs = fs.readFileSync(`${__dirname}/../config.json`)
     const config = JSON.parse(rs)
     const path = config.path
     const port = config.port
@@ -235,5 +235,5 @@ function main() {
     console.log("Register prefix " + prefix.toUri());
     face.registerPrefix(prefix, echo.onInterest.bind(echo), echo.onRegisterFailed.bind(echo));
 }
-
+var rs = fs.readFileSync(`${__dirname}/../config.json`)
 main();
