@@ -161,9 +161,6 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
     }
     //const rs = fs.readFileSync(`${__dirname}/../config.json`)
     const config = JSON.parse(rs)
-    console.log('----config----')
-    console.log(config)
-    console.log('-----------')
     const path = config.path
     const port = config.port
     const method = config.method
@@ -176,7 +173,6 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         console.log('using netowrk')
         const r = await fetch(`http://localhost:${port}/v1/un/exists/file?afid=${afid}`)
         res = await r.json()
-        console.log(res)
         if (!res.is_exists) {
             return
         }
@@ -194,12 +190,13 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         }
     }
 
-    console.log('---res---')
-    console.log(res)
     if ((str.split('/'))[2] === 'info') {
         let obj = {}
-        obj.result = res
-        obj.config = config
+        //obj.result = res
+        console.log('----config----')
+        console.log(config)
+        console.log('-----------')
+        obj = config
         data.setContent(JSON.stringify(obj));
         that.keyChain.sign(data);
 
