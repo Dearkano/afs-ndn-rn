@@ -161,6 +161,9 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
     }
     //const rs = fs.readFileSync(`${__dirname}/../config.json`)
     const config = JSON.parse(rs)
+    console.log('----config----')
+    console.log(config)
+    console.log('-----------')
     const path = config.path
     const port = config.port
     const method = config.method
@@ -191,7 +194,8 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         }
     }
 
-
+    console.log('---res---')
+    console.log(res)
     if ((str.split('/'))[2] === 'info') {
         let obj = {}
         obj.result = res
