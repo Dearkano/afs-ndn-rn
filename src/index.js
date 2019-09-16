@@ -166,6 +166,8 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
     const method = config.method
     const x64cmd = `cd ${path};\
     ./afs-x64 \";_f=query;afid=${afid};\";`
+    const arfs_x64cmd = `cd ${path};\
+    ./afs-x64 \";_f=arfs_query;afid=${afid};\";`
     const x86cmd = `cd ${path};\
     ./afs-x86 \";_f=query;afid=${afid};\";`
     let res = ''
@@ -178,7 +180,7 @@ Echo.prototype.onInterest = async function (prefix, interest, face, interestFilt
         }
     } else {
         try {
-            const out = await exec(x64cmd)
+            const out = await exec(arfs_x64cmd)
             res = out.stdout
         } catch {
             const out = await exec(x86cmd)
